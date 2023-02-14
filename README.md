@@ -3,7 +3,7 @@
 PyTorch implementation of ICLR'23 paper [GOGGLE: Generative Modelling for Tabular Data by Learning Relational Structure](https://openreview.net/forum?id=fPVRcJqspu&referrer=%5BAuthor%20Console%5D(%2Fgroup%3Fid%3DICLR.cc%2F2023%2FConference%2FAuthors%23your-submissions)). Authors: Tennison Liu, Zhaozhi Qian, Jeroen Berrevoets, Mihaela van der Schaar
 
 ---
-###Abstract
+### Abstract
 
 Generative modelling of tabular data entails a particular set of challenges, including heterogeneous relationships, limited number of samples, and difficulties in incorporating prior knowledge. This work introduces **GOGGLE**, a generative model that learns a relational structure underlying tabular data to better model variable dependencies, to introduce regularization, and to incorporate prior knowledge.
 
@@ -11,7 +11,7 @@ Generative modelling of tabular data entails a particular set of challenges, inc
 **Key components of GOGGLE Framework.** 1. Simultaneous learning of relational structure $G_\phi$ and $F_\theta$ s.t. generative process respects relational structure. 2. Injection of prior knowledge and regularization on variable dependence. 3. Synthetic sample generated using $\hat{x} = F_\theta(z; G_\phi) \:, \: z\sim p_Z$.
 
 ---
-###Experiments
+### Experiments
 
 To setup the virtual environment and necessary packages, please run the following commands:
 ```
@@ -32,7 +32,7 @@ Place dataset in ```exps/data```, see experiment notebooks with instructions in 
 
 ---
 
-###Citation
+### Citation
 If our paper or code helped you in your own research, please cite our work as:
 ```
 @inproceedings{liugoggle,
