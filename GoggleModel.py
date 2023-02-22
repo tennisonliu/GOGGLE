@@ -22,23 +22,25 @@ class GoggleModel():
                  decoder_dim=64,
                  decoder_l=2,
                  threshold=0.1,
-                 het_decoder=False,
+                 decoder_arch='gcn',
                  graph_prior=None,
                  prior_mask=None,
                  device='cpu',
                  alpha=0.1,
                  beta=0.1,
                  seed=42,
+                 iter_opt=True,
                  **kwargs):
         self.ds_name = ds_name
         self.device = device
         self.seed = seed
+        torch.manual_seed(seed)
         self.learning_rate = kwargs.get('learning_rate', 5e-3)
         self.weight_decay = kwargs.get('weight_decay', 1e-3)
         self.epochs = kwargs.get('epochs', 1000)
-        self.batch_size = kwargs.get('batch_size', 64)
+        self.batch_size = kwargs.get('batch_size', 32)
         self.patience = kwargs.get('patience', 50)
-        self.logging_epoch = kwargs.get('logging', 50)
+        self.logging_epoch = kwargs.get('logging', 100)
         self.loss = GoggleLoss(alpha, beta, graph_prior, device)
         self.model = Goggle(input_dim,
                             encoder_dim,
@@ -47,13 +49,27 @@ class GoggleModel():
                             decoder_dim,
                             decoder_l,
                             threshold,
-                            het_decoder,
+                            decoder_arch,
                             graph_prior,
                             prior_mask,
                             device).to(device)
-        self.optimiser = optim.Adam(self.model.parameters(),
-                                    lr=self.learning_rate,
-                                    weight_decay=self.weight_decay)
+        self.iter_opt = iter_opt
+        if iter_opt:
+            gl_params = ['learned_graph.graph']
+            graph_learner_params = list(
+                filter(lambda kv: kv[0] in gl_params, self.model.named_parameters()))
+            graph_autoencoder_params = list(
+                filter(lambda kv: kv[0] not in gl_params, self.model.named_parameters()))
+            self.optimiser_gl = torch.optim.Adam([param[1] for param in graph_learner_params],
+                                                 lr=self.learning_rate,
+                                                 weight_decay=0)
+            self.optimiser_ga = torch.optim.Adam([param[1] for param in graph_autoencoder_params],
+                                                 lr=self.learning_rate,
+                                                 weight_decay=self.weight_decay)
+        else:
+            self.optimiser = optim.Adam(self.model.parameters(),
+                                        lr=self.learning_rate,
+                                        weight_decay=self.weight_decay)
 
     def evaluate(self, data_loader, epoch):
         with torch.no_grad():
@@ -94,21 +110,54 @@ class GoggleModel():
         for epoch in range(self.epochs):
 
             train_loss, num_samples = 0., 0
-            for _, data in enumerate(train_loader):
-                data = data[0].to(self.device)
-                self.model.train()
+            for i, data in enumerate(train_loader):
+                if self.iter_opt:
+                    if i % 2 == 0:
+                        self.model.train()
+                        self.optimiser_ga.zero_grad()
 
-                self.optimiser.zero_grad()
+                        data = data[0].to(self.device)
 
-                x_hat, adj, mu_z, logvar_z = self.model(data, epoch)
-                loss, _, _, _ = self.loss(
-                    x_hat, data, mu_z, logvar_z, adj)
+                        x_hat, adj, mu_z, logvar_z = self.model(data, epoch)
+                        loss, _, _, _ = self.loss(
+                            x_hat, data, mu_z, logvar_z, adj)
 
-                loss.backward(retain_graph=True)
-                self.optimiser.step()
+                        loss.backward(retain_graph=True)
+                        self.optimiser_ga.step()
 
-                train_loss += loss.item()
-                num_samples += data.shape[0]
+                        train_loss += loss.item()
+                        num_samples += data.shape[0]
+                    else:
+                        self.model.train()
+                        self.optimiser_gl.zero_grad()
+
+                        data = data[0].to(self.device)
+
+                        x_hat, adj, mu_z, logvar_z = self.model(data, epoch)
+                        loss, _, _, _ = self.loss(
+                            x_hat, data, mu_z, logvar_z, adj)
+
+                        loss.backward(retain_graph=True)
+                        self.optimiser_gl.step()
+
+                        train_loss += loss.item()
+                        num_samples += data.shape[0]
+
+                else:
+                    data = data[0].to(self.device)
+                    self.model.train()
+
+                    self.optimiser.zero_grad()
+
+                    x_hat, adj, mu_z, logvar_z = self.model(data, epoch)
+                    loss, _, _, _ = self.loss(
+                        x_hat, data, mu_z, logvar_z, adj)
+
+                    loss.backward(retain_graph=True)
+                    self.optimiser.step()
+
+                    train_loss += loss.item()
+                    num_samples += data.shape[0]
 
             train_loss /= num_samples
 

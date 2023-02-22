@@ -1,25 +1,35 @@
 from .RGCNConv import RGCNConv
 from torch import nn
-from dgl.nn import SAGEConv
+from dgl.nn import SAGEConv, GraphConv
 
 
 class GraphDecoderHomo(nn.Module):
-    def __init__(self, decoder_dim, decoder_l, device):
+    def __init__(self, decoder_dim, decoder_l, decoder_arch, device):
         super(GraphDecoderHomo, self).__init__()
         decoder = nn.ModuleList([])
 
-        for i in range(decoder_l):
-            if i == decoder_l-1:
-                decoder.append(
-                    SAGEConv(decoder_dim, 1, aggregator_type='mean', bias=True))
-            else:
-                decoder_dim_ = int(decoder_dim/2)
-                # decoder_dim_ = int(decoder_dim)
-                # decoder.append(SAGEConv(decoder_dim, decoder_dim_,
-                #                aggregator_type='mean', bias=True, activation=nn.Tanh(), norm=nn.BatchNorm1d(decoder_dim_)))
-                decoder.append(SAGEConv(decoder_dim, decoder_dim_,
-                               aggregator_type='mean', bias=True, activation=nn.Tanh()))
-                decoder_dim = decoder_dim_
+        if decoder_arch == 'gcn':
+            for i in range(decoder_l):
+                if i == decoder_l-1:
+                    decoder.append(
+                        GraphConv(decoder_dim, 1, norm='both', weight=True, bias=True))
+                else:
+                    decoder_dim_ = int(decoder_dim/2)
+                    decoder.append(GraphConv(decoder_dim, decoder_dim_,
+                                             norm='both', weight=True, bias=True, activation=nn.Tanh()))
+                    decoder_dim = decoder_dim_
+        elif decoder_arch == 'sage':
+            for i in range(decoder_l):
+                if i == decoder_l-1:
+                    decoder.append(
+                        SAGEConv(decoder_dim, 1, aggregator_type='mean', bias=True))
+                else:
+                    decoder_dim_ = int(decoder_dim/2)
+                    decoder.append(SAGEConv(decoder_dim, decoder_dim_,
+                                            aggregator_type='mean', bias=True, activation=nn.Tanh()))
+                    decoder_dim = decoder_dim_
+        else:
+            raise Exception('decoder can only be {het|gcn|sage}')
 
         self.decoder = nn.Sequential(*decoder)
 

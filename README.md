@@ -28,7 +28,7 @@ Install the required modules:
 $ pip install requirements.txt
 ```
 
-Place dataset in ```exps/data```, see experiment notebooks with instructions in ```exps/exp_{data}.ipynb```.
+Place dataset in ```exps/data```, and see experiment notebooks with instructions in 1) ```exps/synthetic_data.``` for synthetic data generation, 2) ```exps/prior_knowledge/.``` for incorporating prior knowledge, and 3) ```exps/ablation/.``` for ablation settings.
 
 ---
 

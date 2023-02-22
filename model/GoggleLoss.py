@@ -20,7 +20,8 @@ class GoggleLoss(nn.Module):
         loss_mse = self.mse_loss(x_recon, x)
         loss_kld = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
         if self.use_prior:
-            loss_graph = (graph - self.graph_prior).norm(p=1)/torch.numel(graph)
+            loss_graph = (graph - self.graph_prior).norm(p=1) / \
+                torch.numel(graph)
         else:
             loss_graph = graph.norm(p=1)/torch.numel(graph)
 
