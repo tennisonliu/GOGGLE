@@ -25,10 +25,13 @@ $ cd goggle
 ```
 Install the required modules:
 ```
-$ pip install requirements.txt
+$ pip install -r requirements.txt
 ```
 
-Place dataset in ```exps/data```, and see experiment notebooks with instructions in 1) ```exps/synthetic_data.``` for synthetic data generation, 2) ```exps/prior_knowledge/.``` for incorporating prior knowledge, and 3) ```exps/ablation/.``` for ablation settings.
+Place dataset in ```exps/data```, and see experiment notebooks with instructions in:
+ - 1) ```exps/synthetic_data.``` for synthetic data generation
+ - 2) ```exps/prior_knowledge/.``` for incorporating prior knowledge, and
+ - 3) ```exps/ablation/.``` for ablation settings.
 
 ---
 
@@ -41,6 +44,3 @@ If our paper or code helped you in your own research, please cite our work as:
   booktitle={International Conference on Learning Representations}
 }
 ```
-
-
-
