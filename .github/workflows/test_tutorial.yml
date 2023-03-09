@@ -1,0 +1,64 @@
+name: Tests Python
+
+on:
+  push:
+    branches: [main, release, review]
+  # pull_request:
+  #   types: [opened, synchronize, reopened]
+  schedule:
+    - cron:  '4 2 * * 3'
+
+
+jobs:
+  Linter:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [3.8]
+        os: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+            pip install bandit pre-commit
+      - name: pre-commit validation
+        run: pre-commit run --all
+      - name: Security checks
+        run: |
+            bandit -r src/goggle/*
+  Library:
+    needs: [Linter]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: ['3.8']
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - uses: gautamkrishnar/keepalive-workflow@v1
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip' # caching pip dependencies
+      - name: Install MacOS dependencies
+        run: |
+            brew install libomp
+        if: ${{ matrix.os == 'macos-latest' }}
+      - name: Install dependencies
+        run: |
+            pip install --upgrade pip
+            pip install torch-scatter torch-sparse -f https://data.pyg.org/whl/torch-1.12.0+cpu.html
+            pip install torch==1.12.0 --extra-index-url https://download.pytorch.org/whl/cpu
+            pip install -r requirements.txt
+            pip install .[testing]
+      - name: Run the tutorials
+        run: python tutorial/nb_test.py --nb_dir tutorial/
