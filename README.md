@@ -38,9 +38,10 @@ Place dataset in ```exps/data```, and see experiment notebooks with instructions
 ### Citation
 If our paper or code helped you in your own research, please cite our work as:
 ```
-@inproceedings{liugoggle,
+@inproceedings{liu2023goggle,
   title={GOGGLE: Generative Modelling for Tabular Data by Learning Relational Structure},
   author={Liu, Tennison and Qian, Zhaozhi and Berrevoets, Jeroen and van der Schaar, Mihaela},
-  booktitle={International Conference on Learning Representations}
+  booktitle={International Conference on Learning Representations},
+  year={2023}
 }
 ```
